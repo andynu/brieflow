@@ -203,13 +203,19 @@ def display_gene_montages(gene_montages_root, gene):
                 )
 
                 if os.path.exists(overlay_tiff_path):
-                    with open(overlay_tiff_path, "rb") as f:
-                        st.download_button(
-                            label="Download Overlay TIFF",
-                            data=f,
-                            file_name=f"{gene}_{selected_guide}_{row['channel']}_overlay.tiff",
-                            key=f"download_{gene}_{selected_guide}_{row['channel']}_{uuid.uuid4()}",
-                        )
+                    ## This loads it into memory, which is fine locally, but not great on the webserver.
+                    # with open(overlay_tiff_path, "rb") as f:
+                    #     st.download_button(
+                    #         label="Download Overlay TIFF",
+                    #         data=f,
+                    #         file_name=f"{gene}_{selected_guide}_{row['channel']}_overlay.tiff",
+                    #         key=f"download_{gene}_{selected_guide}_{row['channel']}_{uuid.uuid4()}",
+                    #     )
+
+                    ## Instead make a regular <a href> link.
+                    relative_path = overlay_tiff_path.replace("/disk1/brieflow_datasets/aconcagua/", "")
+                    static_url = f"/aconcagua_dataset_static/{relative_path}"
+                    st.markdown(f"[Download Overlay TIFF]({static_url})")
                 else:
                     st.warning(f"No overlay tiff found: {overlay_tiff_path}")
             else:
