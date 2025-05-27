@@ -18,7 +18,7 @@ import matplotlib.colors as mcolors
 
 from src.filesystem import FileSystem
 from src.filtering import create_filter_radio, apply_filter
-from src.config import BRIEFLOW_OUTPUT_PATH
+from src.config import BRIEFLOW_OUTPUT_PATH, STATIC_ASSET_URL_ROOT, STATIC_ASSET_PATH
 
 # =====================
 # CONSTANTS
@@ -203,19 +203,20 @@ def display_gene_montages(gene_montages_root, gene):
                 )
 
                 if os.path.exists(overlay_tiff_path):
-                    ## This loads it into memory, which is fine locally, but not great on the webserver.
-                    # with open(overlay_tiff_path, "rb") as f:
-                    #     st.download_button(
-                    #         label="Download Overlay TIFF",
-                    #         data=f,
-                    #         file_name=f"{gene}_{selected_guide}_{row['channel']}_overlay.tiff",
-                    #         key=f"download_{gene}_{selected_guide}_{row['channel']}_{uuid.uuid4()}",
-                    #     )
-
-                    ## Instead make a regular <a href> link.
-                    relative_path = overlay_tiff_path.replace("/disk1/brieflow_datasets/aconcagua/", "")
-                    static_url = f"/aconcagua_dataset_static/{relative_path}"
-                    st.markdown(f"[Download Overlay TIFF]({static_url})")
+                    if STATIC_ASSET_URL_ROOT and STATIC_ASSET_PATH:
+                        # Use nginx-served static files when configured
+                        relative_path = overlay_tiff_path.replace(STATIC_ASSET_PATH, "")
+                        static_url = f"{STATIC_ASSET_URL_ROOT}{relative_path}"
+                        st.markdown(f"[Download Overlay TIFF]({static_url})")
+                    else:
+                        # Fall back to direct download when running locally
+                        with open(overlay_tiff_path, "rb") as f:
+                            st.download_button(
+                                label="Download Overlay TIFF",
+                                data=f,
+                                file_name=f"{gene}_{selected_guide}_{row['channel']}_overlay.tiff",
+                                key=f"download_{gene}_{selected_guide}_{row['channel']}_{uuid.uuid4()}",
+                            )
                 else:
                     st.warning(f"No overlay tiff found: {overlay_tiff_path}")
             else:
